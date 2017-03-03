@@ -1,5 +1,5 @@
 #!/usr/bin/env python2
-#
+# Phil's work
 # OpenCV Python reference: http://opencv.willowgarage.com/documentation/python/index.html
 
 import cv
