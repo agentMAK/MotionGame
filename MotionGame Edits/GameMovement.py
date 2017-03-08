@@ -14,7 +14,7 @@ class Target:
         self.y = y
         self.width = 0
         self.height = 0
-        self.speed = (0,1)
+        self.speed = (0,0)
         #If ball hasn't been touched yet
         self.active = True
 
@@ -26,7 +26,7 @@ class Target:
 
     def update(self):
         self.x += self.speed[0]
-        self.y += self.speed[1]
+        self.y += self.speed[0]
 
 # Create windows to show the captured images
 cv.NamedWindow("window_a", cv.CV_WINDOW_AUTOSIZE)
@@ -86,7 +86,7 @@ def create_targets(count):
     return targets
 
 #No. of targets and creates the that many targets using the createTarget method
-nballs = 3
+nballs = 1
 targets = create_targets(nballs)
 
 #Delay at the start of the game
