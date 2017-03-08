@@ -57,6 +57,10 @@ current = cv.CreateImage(frame_size, 8L, 3)
 cv.SetZero(current)
 
 #Resize gives the src image specs such as height and width
+bola_original = cv.LoadImage("Aqua-Ball-Red-icon.png")
+bola = cv.CreateImage((100,100), bola_original.depth, bola_original.channels)
+cv.Resize(bola_original, bola)
+
 bolaG_original = cv.LoadImage("Aqua-Ball-Green-icon.png")
 bolaG = cv.CreateImage((100,100), bolaG_original.depth, bolaG_original.channels)
 cv.Resize(bolaG_original, bolaG)
@@ -72,36 +76,26 @@ cv.Resize(bolaB_original, bolaB)
 
 
 #Checks the movement in that of the target
-def hit_value(image, targetB):
+def hit_value(image, target):
     # Get's coordinates for where it needs to go from the target class.
-    roi = cv.GetSubRect(image, targetB.getDimensions())
+    roi = cv.GetSubRect(image, target.getDimensions())
     return cv.CountNonZero(roi)
 
-def create_targetsB(count):
+def create_targets(count):
     targetsB = list()
     for i in range(count):
         #Choose random x coordinates for targets to start
         tgt = Target(random.randint(0, frame_size[0]-bola.width), 0)
         tgt.width = bola.width
         tgt.height = bola.height
-        targetsB.append(tgt)
+        targets.append(tgt)
 
-    return targetsB
+    return targets
 
-def create_targetsB(count):
-    targetsB = list()
-    for i in range(count):
-        #Choose random x coordinates for targets to start
-        tgtB = Target(random.randint(0, frame_size[0]-bolaB.width), 0)
-        tgtB.width = bolaB.width
-        tgtB.height = bolaB.height
-        targetsB.append(tgt)
-
-    return targetsB
 
 #No. of targets and creates the that many targets using the createTarget method
-nbolasB = 1
-targetsB = create_targetsB(nbolasB)
+nbolas = 1
+targets = create_targets(nbolas)
 
 #Delay at the start of the game
 initialDelay = 100
@@ -142,7 +136,7 @@ while True:
 
 
     if initialDelay <= 0:
-        for t in targetsB:
+        for t in targets:
             #You only allowed to let 5 target touch the ground
             if t.active:
                 nzero = hit_value(frame, t)
@@ -150,13 +144,13 @@ while True:
                 if nzero < 1000 and selected == False:
                     # Draws the target to screen
                     cv.SetImageROI(capture, t.getDimensions())
-                    cv.Copy(bolaB, capture, mask)
+                    cv.Copy(bola, capture, mask)
                     cv.ResetImageROI(capture)
                     #t.update()
                     # If the target hits the bottom
                     if t.y + t.height >= frame_size[1]:
                         t.active = False
-                        nbolasB -= 1
+                        nbolas -= 1
                 #If the is move that it HIT
                 else:
                     selected = True
@@ -169,7 +163,7 @@ while True:
                     #Move faster downwards the more goes
                     #if t.speed[1] < 15:
                         #t.speed = (0, t.speed[1]+1)
-                    score += nbolasB
+                    score += nbolas
 
 
         if selected == True:
@@ -177,8 +171,8 @@ while True:
             print selectedTimeElapsed
             if selectedTimeElapsed > 2:
                 selected = False
-                t.y = random.randint(0, frame_size[1]-bolaB.height)
-                t.x = random.randint(0, frame_size[0]-bolaB.width)
+                t.y = random.randint(0, frame_size[1]-bola.height)
+                t.x = random.randint(0, frame_size[0]-bola.width)
 
     #cv.PutText(capture, "Score: %d" % score, (30,frame_size[1]-30), font, cv.RGB(221,87,122))
 
