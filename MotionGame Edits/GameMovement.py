@@ -29,11 +29,11 @@ class Target:
         self.y += self.speed[1]
 
 # Create windows to show the captured images
-#cv.NamedWindow("window_a", cv.CV_WINDOW_AUTOSIZE)
-cv.NamedWindow("window_b", cv.CV_WINDOW_AUTOSIZE)
+cv.NamedWindow("window_a", cv.CV_WINDOW_AUTOSIZE)
+cv.NamedWindow("Motion", cv.CV_WINDOW_AUTOSIZE)
 
 # Structuring element
-#Create an circle and puts it on the screen at postiion (4,4)
+#Create a circle and puts it on the screen at position (4,4)
 es = cv.CreateStructuringElementEx(9,9, 4,4, cv.CV_SHAPE_ELLIPSE)
 
 
@@ -56,16 +56,16 @@ current = cv.CreateImage(frame_size, 8L, 3)
 cv.SetZero(current)
 
 #Resize gives the src image specs such as height and width
-bola_original = cv.LoadImage("Aqua-Ball-Red-icon.png")
-bola = cv.CreateImage((100,100), bola_original.depth, bola_original.channels)
-cv.Resize(bola_original, bola)
+original_ball = cv.LoadImage("Aqua-Ball-Red-icon.png")
+ball = cv.CreateImage((50,50), original_ball.depth, original_ball.channels)
+cv.Resize(original_ball, ball)
 
-bolaG_original = cv.LoadImage("Aqua-Ball-Green-icon.png")
-bolaG = cv.CreateImage((100,100), bolaG_original.depth, bolaG_original.channels)
-cv.Resize(bolaG_original, bolaG)
+ballG_original = cv.LoadImage("Aqua-Ball-Green-icon.png")
+ballG = cv.CreateImage((50,50), ballG_original.depth, ballG_original.channels)
+cv.Resize(ballG_original, ballG)
 
 mask_original = cv.LoadImage("input-mask.png")
-mask = cv.CreateImage((100,100), mask_original.depth, bola_original.channels)
+mask = cv.CreateImage((50,50), mask_original.depth, original_ball.channels)
 cv.Resize(mask_original, mask)
 
 #Checks the movement in that of the target
@@ -78,33 +78,33 @@ def create_targets(count):
     targets = list()
     for i in range(count):
         #Choose random x coordinates for targets to start
-        tgt = Target(random.randint(0, frame_size[0]-bola.width), 0)
-        tgt.width = bola.width
-        tgt.height = bola.height
+        tgt = Target(random.randint(0, frame_size[0]-ball.width), 0)
+        tgt.width = ball.width
+        tgt.height = ball.height
         targets.append(tgt)
 
     return targets
 
 #No. of targets and creates the that many targets using the createTarget method
-nbolas = 1
-targets = create_targets(nbolas)
+nballs = 3
+targets = create_targets(nballs)
 
 #Delay at the start of the game
-initialDelay = 100
+initialDelay = 50
 
 score = 0
 #Time
 t0 = time.clock()
 
 
-font = cv.InitFont(cv.CV_FONT_HERSHEY_COMPLEX, 1, 4)
+font = cv.InitFont(cv.CV_FONT_HERSHEY_TRIPLEX, 1, 2)
 
 # capture - original footage
 # current - blurred footage
 # difference - difference frame
 # frame - difference frame gray scaled > threshold > dilate | working image
-# bola_original - imagem da bola
-# bola - imagem da bola menor
+# original_ball - imagem da ball
+# ball - imagem da ball menor
 # mask_original - Mask image
 # mask - Image of the smaller mask
 # Main loop
@@ -133,30 +133,34 @@ while True:
             #You only allowed to let 5 target touch the ground
             if t.active:
                 nzero = hit_value(frame, t)
-                #If the is NO MOVEMENT in the area of the target, draw next shape
+                #If there is NO MOVEMENT in the area of the target, draw next shape
                 if nzero < 1000 and selected == False:
                     # Draws the target to screen
                     cv.SetImageROI(capture, t.getDimensions())
-                    cv.Copy(bola, capture, mask)
+                    cv.Copy(ball, capture, mask)
                     cv.ResetImageROI(capture)
-                    #t.update()
+                    t.update()
                     # If the target hits the bottom
                     if t.y + t.height >= frame_size[1]:
                         t.active = False
-                        nbolas -= 1
-                #If the is move that it HIT
+                        nballs -= 1
+                #If there is movement that it HIT
                 else:
-                    selected = True
-                    timeSelected = time.clock();
-                    cv.SetImageROI(capture, t.getDimensions())
-                    cv.Copy(bolaG, capture, mask)
-                    cv.ResetImageROI(capture)
-
+					score += 1
+					#selected = True
+					timeSelected = time.clock();
+					cv.SetImageROI(capture, t.getDimensions())
+					cv.Copy(ballG, capture, mask)
+					cv.ResetImageROI(capture)
+					
+					t.y = random.randint(75, 200)
+					t.x = random.randint(0, frame_size[0]-ball.width)
+					t.speed = (0, t.speed[1]+1)
 
                     #Move faster downwards the more goes
-                    #if t.speed[1] < 15:
-                        #t.speed = (0, t.speed[1]+1)
-                    score += nbolas
+					#if t.speed[1] < 15:
+						#t.speed = (0, t.speed[1]+1)
+					#score += nballs
 
 
         if selected == True:
@@ -164,15 +168,15 @@ while True:
             print selectedTimeElapsed
             if selectedTimeElapsed > 2:
                 selected = False
-                t.y = random.randint(0, frame_size[1]-bola.height)
-                t.x = random.randint(0, frame_size[0]-bola.width)
+                t.y = random.randint(0, frame_size[0]-ball.height)
+                t.x = random.randint(0, frame_size[0]-ball.width)
 
-    #cv.PutText(capture, "Score: %d" % score, (30,frame_size[1]-30), font, cv.RGB(221,87,122))
+    cv.PutText(capture, "Score: %d" % score, (285,frame_size[1]-422), font, cv.RGB(221,87,250))
 
-    #Time elplased
+    #Time elapsed
     timer = time.clock() - t0
     cv.PutText(capture, "Timer: %d" % timer, (30,frame_size[1]-30), font,cv.RGB(221,87,122))
-    #cv.ShowImage("window_a", frame)
+    cv.ShowImage("window_a", frame)
 
     cv.ShowImage("window_b", capture)
 
