@@ -130,9 +130,10 @@ while True:
                     cv.ResetImageROI(capture)
                     t.update()
                     #If the target hits the bottom
-					if t.y + t.height >= frame_size[1]:
-						t.active = False
-						nballs -= 1
+		    if t.y + t.height >= frame_size[1]:
+			print t.y
+			t.active = False
+			nballs -= 1
                 #If the is move that it HOT
                 else:
                     t.y = 0
@@ -143,11 +144,11 @@ while True:
                     score += nballs
 
     cv.PutText(capture, "Score: %d" % score, (30,frame_size[1]-30), font, cv.RGB(221,87,122))
-	cv.ShowImage("window_a", frame)
+    cv.ShowImage("window_a", frame)
 	
-	cv.ShowImage("window_b", capture)
+    cv.ShowImage("window_b", capture)
 
-	previous = cv.CloneImage(current)
+    previous = cv.CloneImage(current)
 
     # Exit game if ESC key is pressed
     c = Key.WaitKey(2)

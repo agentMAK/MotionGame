@@ -13,8 +13,8 @@ class Target:
         self.x = x
         self.y = y
         self.width = 0
-        self.height = 0
-        self.speed = (0,0)
+        self.height = frame_size[0]
+        self.speed = (0,-1)
         #If ball hasn't been touched yet
         self.active = True
 
@@ -26,7 +26,7 @@ class Target:
 
     def update(self):
         self.x += self.speed[0]
-        self.y += self.speed[0]
+        self.y += self.speed[1]
 
 # Create windows to show the captured images
 cv.NamedWindow("window_a", cv.CV_WINDOW_AUTOSIZE)
@@ -57,15 +57,15 @@ cv.SetZero(current)
 
 #Resize gives the src image specs such as height and width
 original_ball = cv.LoadImage("Aqua-Ball-Red-icon.png")
-ball = cv.CreateImage((50,50), original_ball.depth, original_ball.channels)
+ball = cv.CreateImage((35,50), original_ball.depth, original_ball.channels)
 cv.Resize(original_ball, ball)
 
 ballG_original = cv.LoadImage("Aqua-Ball-Green-icon.png")
-ballG = cv.CreateImage((50,50), ballG_original.depth, ballG_original.channels)
+ballG = cv.CreateImage((35,50), ballG_original.depth, ballG_original.channels)
 cv.Resize(ballG_original, ballG)
 
 mask_original = cv.LoadImage("input-mask.png")
-mask = cv.CreateImage((50,50), mask_original.depth, original_ball.channels)
+mask = cv.CreateImage((35,50), mask_original.depth, original_ball.channels)
 cv.Resize(mask_original, mask)
 
 #Checks the movement in that of the target
@@ -78,7 +78,7 @@ def create_targets(count):
     targets = list()
     for i in range(count):
         #Choose random x coordinates for targets to start
-        tgt = Target(random.randint(0, frame_size[0]-ball.width), 0)
+        tgt = Target(random.randint(0, frame_size[0]-ball.width), frame_size[1]-ball.height)
         tgt.width = ball.width
         tgt.height = ball.height
         targets.append(tgt)
@@ -86,7 +86,7 @@ def create_targets(count):
     return targets
 
 #No. of targets and creates the that many targets using the createTarget method
-nballs = 1
+nballs = 5
 targets = create_targets(nballs)
 
 #Delay at the start of the game
@@ -141,7 +141,7 @@ while True:
                     cv.ResetImageROI(capture)
                     t.update()
                     # If the target hits the bottom
-                    if t.y + t.height >= frame_size[1]:
+                    if t.y  <= 0:
                         t.active = False
                         nballs -= 1
                 #If there is movement that it HIT
@@ -153,13 +153,13 @@ while True:
 					cv.Copy(ballG, capture, mask)
 					cv.ResetImageROI(capture)
 					
-					t.y = random.randint(75, 200)
+					t.y = frame_size[1]-ball.height
 					t.x = random.randint(0, frame_size[0]-ball.width)
-					t.speed = (0, t.speed[1]+1)
+					t.speed = (0, t.speed[1]-1/5)
 
                     #Move faster downwards the more goes
-					#if t.speed[1] < 15:
-						#t.speed = (0, t.speed[1]+1)
+					if t.speed[1] < 15:
+						t.speed = (0, t.speed[1]-1/5)
 					#score += nballs
 
 
@@ -168,13 +168,20 @@ while True:
             print selectedTimeElapsed
             if selectedTimeElapsed > 2:
                 selected = False
-                t.y = random.randint(0, frame_size[0]-ball.height)
+                t.y = frame_size[1]-ball.height
                 t.x = random.randint(0, frame_size[0]-ball.width)
 
     cv.PutText(capture, "Score: %d" % score, (285,frame_size[1]-422), font, cv.RGB(221,87,250))
 
     #Time elapsed
-    timer = time.clock() - t0
+    
+    if (time.clock()-t0)<60:
+	timer = 60- (time.clock() - t0)
+    else:
+	timer = 0
+	gameOver = True
+	
+	
     cv.PutText(capture, "Timer: %d" % timer, (30,frame_size[1]-30), font,cv.RGB(221,87,122))
     cv.ShowImage("window_a", frame)
 
