@@ -29,7 +29,7 @@ class Target:
         self.y += self.speed[1]
 
 # Create windows to show the captured images
-#cv.NamedWindow("window_a", cv.CV_WINDOW_AUTOSIZE)
+cv.NamedWindow("window_a", cv.CV_WINDOW_AUTOSIZE)
 cv.NamedWindow("window_b", cv.CV_WINDOW_AUTOSIZE)
 
 # Structuring element
@@ -56,12 +56,12 @@ current = cv.CreateImage(frame_size, 8L, 3)
 cv.SetZero(current)
 
 #Resize gives the src image specs such as height and width
-bola_original = cv.LoadImage("Aqua-Ball-Red-icon.png")
-bola = cv.CreateImage((64,64), bola_original.depth, bola_original.channels)
-cv.Resize(bola_original, bola)
+ball_original = cv.LoadImage("Aqua-Ball-Red-icon.png")
+ball = cv.CreateImage((64,64), ball_original.depth, ball_original.channels)
+cv.Resize(ball_original, ball)
 
 mask_original = cv.LoadImage("input-mask.png")
-mask = cv.CreateImage((64,64), mask_original.depth, bola_original.channels)
+mask = cv.CreateImage((64,64), mask_original.depth, ball_original.channels)
 cv.Resize(mask_original, mask)
 
 #Checks the movement in that of the target
@@ -74,16 +74,16 @@ def create_targets(count):
     targets = list()
     for i in range(count):
         #Choose random x coordinates for targets to start
-        tgt = Target(random.randint(0, frame_size[0]-bola.width), 0)
-        tgt.width = bola.width
-        tgt.height = bola.height
+        tgt = Target(random.randint(0, frame_size[0]-ball.width), 0)
+        tgt.width = ball.width
+        tgt.height = ball.height
         targets.append(tgt)
 
     return targets
 
 #No. of targets and creates the that many targets using the createTarget method
-nbolas = 5
-targets = create_targets(nbolas)
+nballs = 5
+targets = create_targets(nballs)
 
 #Delay at the start of the game
 initialDelay = 100
@@ -96,8 +96,8 @@ font = cv.InitFont(cv.CV_FONT_HERSHEY_COMPLEX, 1, 4)
 # current - blurred footage
 # difference - difference frame
 # frame - difference frame gray scaled > threshold > dilate | working image
-# bola_original - imagem da bola
-# bola - imagem da bola menor
+# ball_original - imagem da ball
+# ball - imagem da ball menor
 # mask_original - Mask image
 # mask - Image of the smaller mask
 # Main loop
@@ -126,25 +126,26 @@ while True:
                 if nzero < 1000:
                     # Draws the target to screen
                     cv.SetImageROI(capture, t.getDimensions())
-                    cv.Copy(bola, capture, mask)
+                    cv.Copy(ball, capture, mask)
                     cv.ResetImageROI(capture)
                     t.update()
-                    # If the target hits the bottom
-                    #if t.y + t.height >= frame_size[1]:
-                        #t.active = False
-                        #nbolas -= 1
+                    #If the target hits the bottom
+		    if t.y + t.height >= frame_size[1]:
+			print t.y
+			t.active = False
+			nballs -= 1
                 #If the is move that it HOT
                 else:
                     t.y = 0
-                    t.x = random.randint(0, frame_size[0]-bola.width)
+                    t.x = random.randint(0, frame_size[0]-ball.width)
                     #Move faster downwards the more goes
                     if t.speed[1] < 15:
                         t.speed = (0, t.speed[1]+1)
-                    score += nbolas
+                    score += nballs
 
     cv.PutText(capture, "Score: %d" % score, (30,frame_size[1]-30), font, cv.RGB(221,87,122))
-    #cv.ShowImage("window_a", frame)
-
+    cv.ShowImage("window_a", frame)
+	
     cv.ShowImage("window_b", capture)
 
     previous = cv.CloneImage(current)
