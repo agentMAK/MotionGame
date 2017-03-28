@@ -9,13 +9,12 @@ import random
 
 class Target:
     """ Class representing the target """
-    def __init__(self, x, y,):
+    def __init__(self, x, y):
         self.x = x
         self.y = y
         self.width = 0
         self.height = 0
         self.speed = (0,1)
-        self.colourCode = 0
         #If ball hasn't been touched yet
         self.active = True
 
@@ -29,13 +28,13 @@ class Target:
         self.x += self.speed[0]
         self.y += self.speed[1]
 
-    def getColourCode(self):
-        return self.colourCode
-
 # Create windows to show the captured images
-#cv.NamedWindow("window_a", cv.CV_WINDOW_AUTOSIZE)
-cv.NamedWindow("window_b", cv.CV_WINDOW_NORMAL)
 cv.NamedWindow("window_a", cv.CV_WINDOW_AUTOSIZE)
+#cv.NamedWindow("window_b", cv.CV_WINDOW_NORMAL)
+cv.NamedWindow("window_b", cv.CV_WINDOW_NORMAL)
+#cv.NamedWindow("window_start", cv.CV_WINDOW_NORMAL)
+#cv2.namedWindow("window", cv2.WND_PROP_FULLSCREEN)
+#cv2.setWindowProperty("window", cv2.WND_PROP_FULLSCREEN, cv2.CV_WINDOW_FULLSCREEN)
 
 # Structuring element
 #Create an circle and puts it on the screen at postiion (4,4)
@@ -61,57 +60,26 @@ current = cv.CreateImage(frame_size, 8L, 3)
 cv.SetZero(current)
 
 #Resize gives the src image specs such as height and width
-"""bola_original = cv.LoadImage("balloon1.png")
-bola = cv.CreateImage((64,105), bola_original.depth, bola_original.channels)
+bola_original = cv.LoadImage("Aqua-Ball-Red-icon.png")
+bola = cv.CreateImage((64,64), bola_original.depth, bola_original.channels)
 cv.Resize(bola_original, bola)
 
-mask_original = cv.LoadImage("balloon1mask.png")
-mask = cv.CreateImage((64,105), mask_original.depth, mask_original.channels)
+mask_original = cv.LoadImage("input-mask.png")
+mask = cv.CreateImage((64,64), mask_original.depth, bola_original.channels)
 cv.Resize(mask_original, mask)
-"""
-balloonMask_Image = cv.LoadImage("balloonMask.png")
-balloonMask = cv.CreateImage((64,105), balloonMask_Image.depth, balloonMask_Image.channels)
-cv.Resize(balloonMask_Image, balloonMask)
 
-# Different colour balloons
-balloonGreen_Image = cv.LoadImage("balloonGreen.png")
-balloonGreen = cv.CreateImage((64,105), balloonGreen_Image.depth, balloonGreen_Image.channels)
-cv.Resize(balloonGreen_Image, balloonGreen)
+start_intro = cv.LoadImage("start_game.jpg")
+start = cv.CreateImage((300,300), start_intro.depth, start_intro.channels)
+cv.Resize(start_intro, start)
 
-balloonBlue_Image = cv.LoadImage("balloonBlue.png")
-balloonBlue = cv.CreateImage((64,105), balloonBlue_Image.depth, balloonBlue_Image.channels)
-cv.Resize(balloonBlue_Image, balloonBlue)
+newStartMaskImage = cv.LoadImage("newStartmask.png")
+newStartMask = cv.CreateImage((300,300), newStartMaskImage.depth, newStartMaskImage.channels)
+cv.Resize(newStartMaskImage, newStartMask)
 
-balloonPink_Image = cv.LoadImage("balloonPink.png")
-balloonPink = cv.CreateImage((64,105), balloonPink_Image.depth, balloonPink_Image.channels)
-cv.Resize(balloonPink_Image, balloonPink)
+newStartImage = cv.LoadImage("newStart.png")
+newStart = cv.CreateImage((300,300), newStartImage.depth, newStartImage.channels)
+cv.Resize(newStartImage, newStart)
 
-balloonOrange_Image = cv.LoadImage("balloonOrange.png")
-balloonOrange = cv.CreateImage((64,105), balloonOrange_Image.depth, balloonOrange_Image.channels)
-cv.Resize(balloonOrange_Image, balloonOrange)
-
-balloonYellow_Image = cv.LoadImage("balloonYellow.png")
-balloonYellow = cv.CreateImage((64,105), balloonYellow_Image.depth, balloonYellow_Image.channels)
-cv.Resize(balloonYellow_Image, balloonYellow)
-
-
-balloons = [balloonGreen,balloonBlue,balloonOrange,balloonPink,balloonYellow]
-
-bombMaskImage = cv.LoadImage("bombMask.png")
-bombMask = cv.CreateImage((500,488), bombMaskImage.depth, bombMaskImage.channels)
-cv.Resize(bombMaskImage, bombMask)
-
-bombImage = cv.LoadImage("bomb.png")
-bomb = cv.CreateImage((500,488), bombImage.depth, bombImage.channels)
-cv.Resize(bombImage, bomb)
-
-startMaskImage = cv.LoadImage("startMask.png")
-startMask = cv.CreateImage((600,450), startMaskImage.depth, startMaskImage.channels)
-cv.Resize(startMaskImage, startMask)
-
-startImage = cv.LoadImage("start.png")
-start = cv.CreateImage((600,450), startImage.depth, startImage.channels)
-cv.Resize(startImage, start)
 
 #Checks the movement in that of the target
 def hit_value(image, target):
@@ -123,26 +91,23 @@ def create_targets(count):
     targets = list()
     for i in range(count):
         #Choose random x coordinates for targets to start
-        tgt = Target(random.randint(0, frame_size[0]-balloonMask.width), 0)
-        tgt.width = balloonMask.width
-        tgt.height = balloonMask.height
-        randomcolourcode = random.randrange(0, 5, 1)
-        tgt.colourCode = randomcolourcode
+        tgt = Target(random.randint(0, frame_size[0]-bola.width), 0)
+        tgt.width = bola.width
+        tgt.height = bola.height
         targets.append(tgt)
-
 
     return targets
 
 def start_dimensions():
-    return((frame_size[0]/2)-300,(frame_size[1]/2)-225,600,450)
+    return(frame_size[0]-300,frame_size[1]-300,300,300)
 
-#No. of targets and creates the that many targets using the createTarget method
+
+#No. of targets and creates the that many targets using the create Target method
 nbolas = 5
 targets = create_targets(nbolas)
 
 #Delay at the start of the game
-startGame = False
-initialDelay = 0
+initialDelay = 100
 
 score = 0
 
@@ -171,18 +136,11 @@ while True:
     cv.Threshold(frame, frame, 10, 0xff, cv.CV_THRESH_BINARY)
     cv.Dilate(frame, frame, element=es, iterations=3)
 
-    #Looks at list of targets
-    if startGame == False:
-        cv.SetImageROI(capture, start_dimensions())
-        cv.Copy(start, capture, startMask)
-        cv.ResetImageROI(capture)
+#Looks at list of targets
+    cv.SetImageROI(capture, start_dimensions())
+    cv.Copy(newStart, capture, newStartMask)
 
-        #Press space bar to run game
-        if cv2.waitKey(33) == 32:
-            initialDelay = 100
-            startGame = True
-
-    if startGame == True and initialDelay <= 0:
+    if initialDelay <= 0:
         for t in targets:
             #You only allowed to let 5 target touch the ground
             if t.active:
@@ -191,23 +149,17 @@ while True:
                 if nzero < 1000:
                     # Draws the target to screen
                     cv.SetImageROI(capture, t.getDimensions())
-                    colour = t.getColourCode()
-                    cv.Copy(balloons[colour], capture, balloonMask)
+                    cv.Copy(bola, capture, mask)
                     cv.ResetImageROI(capture)
                     t.update()
                     # If the target hits the bottom
-                    if t.y + t.height >= frame_size[1]:
-                        t.active = False
-                        nbolas -= 1
-                #If the is balloon it hit
+                    #if t.y + t.height >= frame_size[1]:
+                        #t.active = False
+                        #nbolas -= 1
+                #If the is move that it HOT
                 else:
                     t.y = 0
-                    t.x = random.randint(0, frame_size[0]-balloonMask.width)
-
-                    #Change colour of balloon
-                    randomcolourcode = random.randrange(0, 5, 1)
-                    t.colourCode = randomcolourcode
-
+                    t.x = random.randint(0, frame_size[0]-bola.width)
                     #Move faster downwards the more goes
                     if t.speed[1] < 15:
                         t.speed = (0, t.speed[1]+1)
@@ -219,7 +171,6 @@ while True:
     cv.ShowImage("window_b", capture)
 
     previous = cv.CloneImage(current)
-
 
     # Exit game if ESC key is pressed
     c = Key.WaitKey(2)
