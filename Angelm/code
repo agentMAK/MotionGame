@@ -15,13 +15,27 @@ class Target:
         self.height = 0
         self.speed = (0,1)
         self.active = True
-
     def getDimensions(self):
         return (self.x, self.y, self.width, self.height)
-
     def centerOrigin(self):
         return (self.x - self.width/2, self.y - self.height/2)
+    def update(self):
+        self.x += self.speed[0]
+        self.y += self.speed[1]
 
+class Targetj:
+    """ Class representing the  bomb """
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+        self.width = 0
+        self.height = 0
+        self.speed = (0,1)
+        self.active = True
+    def getDimensions(self):
+        return (self.x, self.y, self.width, self.height)
+    def centerOrigin(self):
+        return (self.x - self.width/2, self.y - self.height/2)
     def update(self):
         self.x += self.speed[0]
         self.y += self.speed[1]
@@ -61,6 +75,7 @@ cv.SetZero(difference)
 current = cv.CreateImage(frame_size, 8L, 3)
 cv.SetZero(current)
 
+
 bola_original = cv.LoadImage("Aqua-Ball-Red-icon.png")
 bola = cv.CreateImage((64,64), bola_original.depth, bola_original.channels)
 cv.Resize(bola_original, bola)
@@ -69,10 +84,14 @@ mask_original = cv.LoadImage("input-mask.png")
 mask = cv.CreateImage((64,64), mask_original.depth, bola_original.channels)
 cv.Resize(mask_original, mask)
 
+bomb_original = cv.LoadImage("Bomb.png")
+bomb = cv.CreateImage((64,64), bomb_original.depth, bola_original.channels)
+cv.Resize(bomb_original, bomb)
+
+
 def hit_value(image, target):
     roi = cv.GetSubRect(image, target.getDimensions())
     return cv.CountNonZero(roi)
-
 def create_targets(count):
     targets = list()
     for i in range(count):
@@ -80,11 +99,25 @@ def create_targets(count):
         tgt.width = bola.width
         tgt.height = bola.height
         targets.append(tgt)
-
     return targets
 
+def hit_valuej(image, targetj):
+    roi = cv.GetSubRect(image, targetj.getDimensions())
+    return cv.CountNonZero(roi)
+def create_targetsj(count):
+    targetsj = list()
+    for j in range(count):
+        tgtj = Targetj(random.randint(0, frame_size[0]-bomb.width), 0)
+        tgtj.width = bomb.width
+        tgtj.height = bomb.height
+        targetsj.append(tgtj)
+    return targetsj
+
 nbolas = 5
+nbombs = 2
 targets = create_targets(nbolas)
+targetsj = create_targetsj(nbombs)
+
 
 initialDelay = 100
 
@@ -115,6 +148,7 @@ while True:
     cv.Threshold(frame, frame, 10, 0xff, cv.CV_THRESH_BINARY)
     cv.Dilate(frame, frame, element=es, iterations=3)
 
+
     if initialDelay <= 0:
         for t in targets:
             if t.active:
@@ -136,6 +170,26 @@ while True:
                         t.speed = (0, t.speed[1]+1)
                     score += nbolas
 
+    if initialDelay <= 0:
+        for l in targetsj:
+            if l.active:
+                nzero = hit_value(frame, l)
+                if nzero < 1000:
+                    # Draws the target to screen
+                    cv.SetImageROI(capture, l.getDimensions())
+                    cv.Copy(bomb, capture, mask)
+                    cv.ResetImageROI(capture)
+                    l.update()
+                    # If the target hits the bottom
+                    if l.y + l.height >= frame_size[1]:
+                        l.active = False
+                        nbombs += 1
+                else:
+                    l.y = 0
+                    l.x = random.randint(0, frame_size[0]-bomb.width)
+                    score -= 10
+
+
     cv.PutText(capture, "Score: %d" % score, (10,frame_size[1]-10), font, cv.RGB(0,0,0))
     cv.ShowImage("window_a", frame)
     if writeVideo:
@@ -152,4 +206,3 @@ while True:
     initialDelay -= 1
 
 print score
-
