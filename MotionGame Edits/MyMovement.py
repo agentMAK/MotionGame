@@ -6,7 +6,7 @@ import cv
 import cv2
 import Key
 import random
-import numpy
+import time
 from PIL import Image, ImageDraw, ImageFont
 
 
@@ -17,8 +17,8 @@ class Target:
         self.x = x
         self.y = y
         self.width = 0
-        self.height = 0
-        self.speed = (0, 1)
+        self.height = frame_size[0]
+        self.speed = (0, -1)
         self.colourCode = 0
         # If ball hasn't been touched yet
         self.active = True
@@ -108,6 +108,7 @@ cv.SetZero(difference)
 current = cv.CreateImage(frame_size, 8L, 3)
 cv.SetZero(current)
 
+
 # Resize gives the src image specs such as height and width
 balloonMask_Image = cv.LoadImage("balloonMask.png")
 balloonMask = cv.CreateImage((64, 105), balloonMask_Image.depth, balloonMask_Image.channels)
@@ -188,7 +189,7 @@ def create_targets(count):
     targets = list()
     for i in range(count):
         # Choose random x coordinates for targets to start
-        tgt = Target(random.randint(0, frame_size[0] - balloonMask.width), 0)
+        tgt = Target(random.randint(0, frame_size[0] - balloonMask.width), frame_size[1] - balloonMask.height)
         tgt.width = balloonMask.width
         tgt.height = balloonMask.height
         tgt.colourCode = random.randrange(0, 5, 1)
@@ -196,25 +197,27 @@ def create_targets(count):
 
     return targets
 
+
 # No. of targets and creates the that many targets using the createTarget method
-nbolas = 5
-targets = create_targets(nbolas)
+nballs = 5
+targets = create_targets(nballs)
 
 # Delay at the start of the game
 startGame = False
 initialDelay = 0
+t0 = -1
 
 myScore = Score()
 
 font = cv.InitFont(cv.CV_FONT_HERSHEY_COMPLEX, 1, 4)
-
+selected = False
 
 # capture - original footage
 # current - blurred footage
 # difference - difference frame
 # frame - difference frame gray scaled > threshold > dilate | working image
-# bola_original - imagem da bola
-# bola - imagem da bola menor
+# ball_original - imagem da ball
+# ball - imagem da ball menor
 # mask_original - Mask image
 # mask - Image of the smaller mask
 # Main loop
@@ -259,8 +262,8 @@ while True:
         cv.Copy(pop, capture, popMask)
         cv.ResetImageROI(capture)
 
-
-
+    if(initialDelay == 0):
+        t0 = time.clock()
 
 
     if startGame == True and initialDelay <= 0:
@@ -277,23 +280,28 @@ while True:
                     cv.ResetImageROI(capture)
                     t.update()
                     # If the target hits the bottom
-                    if t.y + t.height >= frame_size[1]:
+                    if t.y <= 0:
                         t.active = False
-                        nbolas -= 1
+                        nballs -= 1
                 # If the is balloon it hit
                 else:
-                    t.y = 0
+                    t.y = frame_size[1]-balloonMask.height
                     t.x = random.randint(0, frame_size[0] - balloonMask.width)
-
+                    t.speed = (0, t.speed[1]-1)
                     # Change colour of balloon
                     t.colourCode = random.randrange(0, 5, 1)
 
                     # Move faster downwards the more goes
                     if t.speed[1] < 15:
-                        t.speed = (0, t.speed[1] + 1)
-                    myScore.points += nbolas
+                        t.speed = (0, t.speed[1] - 2)
+                    myScore.points += 1
 
 
+    if startGame == True and initialDelay < 0 and time.clock() - t0 < 60:
+        timer = 61 - (time.clock() - t0)
+        cv.PutText(capture, "Timer: %d" % timer, (frame_size[0]-500, frame_size[1] - 50), font, cv.RGB(221, 87, 122))
+    else:
+        timer = 0
 
     #Update score every few seconds
     if(initialDelay%10 == 0):
@@ -316,4 +324,4 @@ while True:
     initialDelay -= 1
 
 # Print score to console
-print score
+#print myScore
