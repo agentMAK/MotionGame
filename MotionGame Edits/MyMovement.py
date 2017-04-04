@@ -39,11 +39,11 @@ class Target:
 
 class Score:
     def __init__(self):
-        scoreImage = cv.LoadImage("score.png")
+        scoreImage = cv.LoadImage("images/score.png")
         self.score = cv.CreateImage((400, 90), scoreImage.depth, scoreImage.channels)
         cv.Resize(scoreImage, self.score)
 
-        scoreMaskImage = cv.LoadImage("scoreMask.png")
+        scoreMaskImage = cv.LoadImage("images/scoreMask.png")
         self.scoreMask = cv.CreateImage((400, 90), scoreMaskImage.depth, scoreMaskImage.channels)
         cv.Resize(scoreMaskImage, self.scoreMask)
 
@@ -56,8 +56,8 @@ class Score:
         scoreMaskImage = Image.new('RGB', size, "black")
 
         # Add font
-        titleFont = ImageFont.truetype("fibre-font.otf", 60)
-        scoreFont = ImageFont.truetype("fibre-font.otf", 118)
+        titleFont = ImageFont.truetype("font/fibre-font.otf", 60)
+        scoreFont = ImageFont.truetype("font/fibre-font.otf", 118)
 
         drawScore = ImageDraw.Draw(scoreImage)
         drawScore.text((16, 19), "score:", font=titleFont, fill=(227, 37, 81))
@@ -67,15 +67,15 @@ class Score:
         drawMaskScore.text((16, 19), "score:", font=titleFont, fill=(225, 225, 225))
         drawMaskScore.text((160, -3), str(self.points), font=scoreFont, fill=(225, 225, 225))
 
-        scoreImage.save("score.png")
-        scoreMaskImage.save("scoreMask.png")
+        scoreImage.save("images/score.png")
+        scoreMaskImage.save("images/scoreMask.png")
 
         # Update the file input
-        scoreImage = cv.LoadImage("score.png")
+        scoreImage = cv.LoadImage("images/score.png")
         self.score = cv.CreateImage((400, 90), scoreImage.depth, scoreImage.channels)
         cv.Resize(scoreImage, self.score)
 
-        scoreMaskImage = cv.LoadImage("scoreMask.png")
+        scoreMaskImage = cv.LoadImage("images/scoreMask.png")
         self.scoreMask = cv.CreateImage((400, 90), scoreMaskImage.depth, scoreMaskImage.channels)
         cv.Resize(scoreMaskImage, self.scoreMask)
 
@@ -110,70 +110,70 @@ cv.SetZero(current)
 
 
 # Resize gives the src image specs such as height and width
-balloonMask_Image = cv.LoadImage("balloonMask.png")
+balloonMask_Image = cv.LoadImage("images/balloonMask.png")
 balloonMask = cv.CreateImage((64, 105), balloonMask_Image.depth, balloonMask_Image.channels)
 cv.Resize(balloonMask_Image, balloonMask)
 
 # Different colour balloons
-balloonGreen_Image = cv.LoadImage("balloonGreen.png")
+balloonGreen_Image = cv.LoadImage("images/balloonGreen.png")
 balloonGreen = cv.CreateImage((64, 105), balloonGreen_Image.depth, balloonGreen_Image.channels)
 cv.Resize(balloonGreen_Image, balloonGreen)
 
-balloonBlue_Image = cv.LoadImage("balloonBlue.png")
+balloonBlue_Image = cv.LoadImage("images/balloonBlue.png")
 balloonBlue = cv.CreateImage((64, 105), balloonBlue_Image.depth, balloonBlue_Image.channels)
 cv.Resize(balloonBlue_Image, balloonBlue)
 
-balloonPink_Image = cv.LoadImage("balloonPink.png")
+balloonPink_Image = cv.LoadImage("images/balloonPink.png")
 balloonPink = cv.CreateImage((64, 105), balloonPink_Image.depth, balloonPink_Image.channels)
 cv.Resize(balloonPink_Image, balloonPink)
 
-balloonOrange_Image = cv.LoadImage("balloonOrange.png")
+balloonOrange_Image = cv.LoadImage("images/balloonOrange.png")
 balloonOrange = cv.CreateImage((64, 105), balloonOrange_Image.depth, balloonOrange_Image.channels)
 cv.Resize(balloonOrange_Image, balloonOrange)
 
-balloonYellow_Image = cv.LoadImage("balloonYellow.png")
+balloonYellow_Image = cv.LoadImage("images/balloonYellow.png")
 balloonYellow = cv.CreateImage((64, 105), balloonYellow_Image.depth, balloonYellow_Image.channels)
 cv.Resize(balloonYellow_Image, balloonYellow)
 
 balloons = [balloonGreen, balloonBlue, balloonOrange, balloonPink, balloonYellow]
 
-bombMaskImage = cv.LoadImage("bombMask.png")
+bombMaskImage = cv.LoadImage("images/bombMask.png")
 bombMask = cv.CreateImage((500, 488), bombMaskImage.depth, bombMaskImage.channels)
 cv.Resize(bombMaskImage, bombMask)
 
-bombImage = cv.LoadImage("bomb.png")
+bombImage = cv.LoadImage("images/bomb.png")
 bomb = cv.CreateImage((500, 488), bombImage.depth, bombImage.channels)
 cv.Resize(bombImage, bomb)
 
-startMaskImage = cv.LoadImage("startMask.png")
+startMaskImage = cv.LoadImage("images/startMask.png")
 startMask = cv.CreateImage((600, 450), startMaskImage.depth, startMaskImage.channels)
 cv.Resize(startMaskImage, startMask)
 
-startImage = cv.LoadImage("start.png")
+startImage = cv.LoadImage("images/start.png")
 start = cv.CreateImage((600, 450), startImage.depth, startImage.channels)
 cv.Resize(startImage, start)
 
-readyImage = cv.LoadImage("ready.png")
+readyImage = cv.LoadImage("images/ready.png")
 ready = cv.CreateImage((600, 450), readyImage.depth, readyImage.channels)
 cv.Resize(readyImage, ready)
 
-readyMaskImage = cv.LoadImage("readyMask.png")
+readyMaskImage = cv.LoadImage("images/readyMask.png")
 readyMask = cv.CreateImage((600, 450), readyMaskImage.depth, readyMaskImage.channels)
 cv.Resize(readyMaskImage, readyMask)
 
-setImage = cv.LoadImage("set.png")
+setImage = cv.LoadImage("images/set.png")
 set = cv.CreateImage((600, 450), setImage.depth, setImage.channels)
 cv.Resize(setImage, set)
 
-setMaskImage = cv.LoadImage("setMask.png")
+setMaskImage = cv.LoadImage("images/setMask.png")
 setMask = cv.CreateImage((600, 450), setMaskImage.depth, setMaskImage.channels)
 cv.Resize(setMaskImage, setMask)
 
-popImage = cv.LoadImage("pop.png")
+popImage = cv.LoadImage("images/pop.png")
 pop = cv.CreateImage((600, 450), popImage.depth, popImage.channels)
 cv.Resize(popImage, pop)
 
-popMaskImage = cv.LoadImage("popMask.png")
+popMaskImage = cv.LoadImage("images/popMask.png")
 popMask = cv.CreateImage((600, 450), popMaskImage.depth, popMaskImage.channels)
 cv.Resize(popMaskImage, popMask)
 
