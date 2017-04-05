@@ -83,7 +83,8 @@ class Score:
 
 # Create windows to show the captured images
 # cv.NamedWindow("window_a", cv.CV_WINDOW_AUTOSIZE)
-cv.NamedWindow("window_b", cv.CV_WINDOW_NORMAL)
+cv.NamedWindow("Bubble Pop - Motion", cv.CV_WINDOW_NORMAL | cv.CV_WINDOW_FULLSCREEN )
+
 #cv.NamedWindow("window_a", cv.CV_WINDOW_AUTOSIZE)
 
 # Structuring element
@@ -325,7 +326,7 @@ def startPlaying(previous):
 
         # cv.ShowImage("window_a", frame)
 
-        cv.ShowImage("window_b", capture)
+        cv.ShowImage("Bubble Pop - Motion", capture)
 
         previous = cv.CloneImage(current)
 
@@ -348,7 +349,7 @@ while True:
         c = Key.WaitKey(2)
         if (c == 27):
             break
-        cv.ShowImage("window_b", capture)
+        cv.ShowImage("Bubble Pop - Motion", capture)
 
 # Print score to console
 #print myScore
