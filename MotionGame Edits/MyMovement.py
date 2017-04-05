@@ -80,6 +80,7 @@ class Score:
         cv.Resize(scoreMaskImage, self.scoreMask)
 
 
+
 # Create windows to show the captured images
 # cv.NamedWindow("window_a", cv.CV_WINDOW_AUTOSIZE)
 cv.NamedWindow("window_b", cv.CV_WINDOW_NORMAL)
@@ -198,19 +199,6 @@ def create_targets(count):
     return targets
 
 
-# No. of targets and creates the that many targets using the createTarget method
-nballs = 5
-targets = create_targets(nballs)
-
-# Delay at the start of the game
-startGame = False
-initialDelay = 0
-t0 = -1
-
-myScore = Score()
-
-font = cv.InitFont(cv.CV_FONT_HERSHEY_COMPLEX, 1, 4)
-selected = False
 
 # capture - original footage
 # current - blurred footage
@@ -221,107 +209,146 @@ selected = False
 # mask_original - Mask image
 # mask - Image of the smaller mask
 # Main loop
+def startPlaying(previous):
+
+    # No. of targets and creates the that many targets using the createTarget method
+    nballs = 5
+    targets = create_targets(nballs)
+
+    # Delay at the start of the game
+    startGame = False
+    endGame = False
+    initialDelay = 0
+    t0 = -1
+
+    myScore = Score()
+
+    font = cv.InitFont(cv.CV_FONT_HERSHEY_COMPLEX, 1, 4)
+    selected = False
+
+
+    while True:
+
+        # Capture a frame
+        capture = cv.QueryFrame(cam)
+        cv.Flip(capture, capture, flipMode=1)
+
+        # Difference between frames
+        cv.Smooth(capture, current, cv.CV_BLUR, 15, 15)
+        cv.AbsDiff(current, previous, difference)
+
+        frame = cv.CreateImage(frame_size, 8, 1)
+        cv.CvtColor(difference, frame, cv.CV_BGR2GRAY)
+        cv.Threshold(frame, frame, 10, 0xff, cv.CV_THRESH_BINARY)
+        cv.Dilate(frame, frame, element=es, iterations=3)
+
+        # Looks at list of targets
+        if startGame == False:
+            cv.SetImageROI(capture,((frame_size[0] / 2) - 300, (frame_size[1] / 2) - 225, 600, 450))
+            cv.Copy(start, capture, startMask)
+            cv.ResetImageROI(capture)
+
+            # Press space bar to run game
+            if cv2.waitKey(33) == 32:
+                initialDelay = 75
+                startGame = True
+
+        # Ready Set POP to start the game
+        if(initialDelay>50):
+            cv.SetImageROI(capture, ((frame_size[0] / 2) - 300, (frame_size[1] / 2) - 225, 600, 450))
+            cv.Copy(ready, capture, readyMask)
+            cv.ResetImageROI(capture)
+
+        if (50 > initialDelay > 25):
+            cv.SetImageROI(capture, ((frame_size[0] / 2) - 300, (frame_size[1] / 2) - 225, 600, 450))
+            cv.Copy(set, capture, setMask)
+            cv.ResetImageROI(capture)
+
+        if (25 > initialDelay > 0):
+            cv.SetImageROI(capture, ((frame_size[0] / 2) - 300, (frame_size[1] / 2) - 225, 600, 450))
+            cv.Copy(pop, capture, popMask)
+            cv.ResetImageROI(capture)
+
+        if(initialDelay == 0):
+            t0 = time.clock()
+            initialDelay -= 1
+
+
+        if startGame == True and initialDelay <= -1:
+           for t in targets:
+                # You only allowed to let 5 target touch the ground
+                if t.active:
+                    nzero = hit_value(frame, t)
+                    # If the is NO MOVEMENT in the area of the target, draw next shape
+                    if nzero < 1000:
+                        # Draws the target to screen
+                        cv.SetImageROI(capture, t.getDimensions())
+                        colour = t.getColourCode()
+                        cv.Copy(balloons[colour], capture, balloonMask)
+                        cv.ResetImageROI(capture)
+                        t.update()
+                        # If the target hits the bottom
+                        if t.y <= 0:
+                            t.active = False
+                            nballs -= 1
+                    # If the is balloon it hit
+                    else:
+                        t.y = frame_size[1]-balloonMask.height
+                        t.x = random.randint(0, frame_size[0] - balloonMask.width)
+                        t.speed = (0, t.speed[1]-1)
+                        # Change colour of balloon
+                        t.colourCode = random.randrange(0, 5, 1)
+
+                        # Move faster downwards the more goes
+                        if t.speed[1] < 15:
+                            t.speed = (0, t.speed[1] - 2)
+                        myScore.points += 1
+
+        if startGame == True and initialDelay == -1 and time.clock() - t0 < 60:
+            timer = 61 - (time.clock() - t0)
+            cv.PutText(capture, "Timer: %d" % timer, (frame_size[0]-500, frame_size[1] - 50), font, cv.RGB(221, 87, 122))
+
+            #Update score every few seconds
+            myScore.update()
+            cv.SetImageROI(capture, (30, (frame_size[1] - 120), 400, 90))
+            cv.Copy(myScore.score, capture, myScore.scoreMask)
+            cv.ResetImageROI(capture)
+        else:
+            timer = -1
+
+        check = (time.clock() - t0)
+
+
+        if check > 60:
+            endGame = True
+
+
+        # cv.ShowImage("window_a", frame)
+
+        cv.ShowImage("window_b", capture)
+
+        previous = cv.CloneImage(current)
+
+        # Exit game if ESC key is pressed
+        c = Key.WaitKey(2)
+
+        if (c == 27 or endGame == True and initialDelay == -1 and timer == -1):
+            print "Game ended"
+            return (myScore.points)
+
+        if(initialDelay > 0):
+            initialDelay -= 1
+
+startPlaying(previous)
+
 while True:
-    # Capture a frame
-    capture = cv.QueryFrame(cam)
-    cv.Flip(capture, capture, flipMode=1)
 
-    # Difference between frames
-    cv.Smooth(capture, current, cv.CV_BLUR, 15, 15)
-    cv.AbsDiff(current, previous, difference)
-
-    frame = cv.CreateImage(frame_size, 8, 1)
-    cv.CvtColor(difference, frame, cv.CV_BGR2GRAY)
-    cv.Threshold(frame, frame, 10, 0xff, cv.CV_THRESH_BINARY)
-    cv.Dilate(frame, frame, element=es, iterations=3)
-
-    # Looks at list of targets
-    if startGame == False:
-        cv.SetImageROI(capture,((frame_size[0] / 2) - 300, (frame_size[1] / 2) - 225, 600, 450))
-        cv.Copy(start, capture, startMask)
-        cv.ResetImageROI(capture)
-
-        # Press space bar to run game
-        if cv2.waitKey(33) == 32:
-            initialDelay = 75
-            startGame = True
-
-    # Ready Set POP to start the game
-    if(initialDelay>50):
-        cv.SetImageROI(capture, ((frame_size[0] / 2) - 300, (frame_size[1] / 2) - 225, 600, 450))
-        cv.Copy(ready, capture, readyMask)
-        cv.ResetImageROI(capture)
-
-    if (50 > initialDelay > 25):
-        cv.SetImageROI(capture, ((frame_size[0] / 2) - 300, (frame_size[1] / 2) - 225, 600, 450))
-        cv.Copy(set, capture, setMask)
-        cv.ResetImageROI(capture)
-
-    if (25 > initialDelay > 0):
-        cv.SetImageROI(capture, ((frame_size[0] / 2) - 300, (frame_size[1] / 2) - 225, 600, 450))
-        cv.Copy(pop, capture, popMask)
-        cv.ResetImageROI(capture)
-
-    if(initialDelay == 0):
-        t0 = time.clock()
-
-
-    if startGame == True and initialDelay <= 0:
-       for t in targets:
-            # You only allowed to let 5 target touch the ground
-            if t.active:
-                nzero = hit_value(frame, t)
-                # If the is NO MOVEMENT in the area of the target, draw next shape
-                if nzero < 1000:
-                    # Draws the target to screen
-                    cv.SetImageROI(capture, t.getDimensions())
-                    colour = t.getColourCode()
-                    cv.Copy(balloons[colour], capture, balloonMask)
-                    cv.ResetImageROI(capture)
-                    t.update()
-                    # If the target hits the bottom
-                    if t.y <= 0:
-                        t.active = False
-                        nballs -= 1
-                # If the is balloon it hit
-                else:
-                    t.y = frame_size[1]-balloonMask.height
-                    t.x = random.randint(0, frame_size[0] - balloonMask.width)
-                    t.speed = (0, t.speed[1]-1)
-                    # Change colour of balloon
-                    t.colourCode = random.randrange(0, 5, 1)
-
-                    # Move faster downwards the more goes
-                    if t.speed[1] < 15:
-                        t.speed = (0, t.speed[1] - 2)
-                    myScore.points += 1
-
-
-    if startGame == True and initialDelay < 0 and time.clock() - t0 < 60:
-        timer = 61 - (time.clock() - t0)
-        cv.PutText(capture, "Timer: %d" % timer, (frame_size[0]-500, frame_size[1] - 50), font, cv.RGB(221, 87, 122))
-    else:
-        timer = 0
-
-    #Update score every few seconds
-    if(initialDelay%10 == 0):
-        myScore.update()
-
-    cv.SetImageROI(capture, (30, (frame_size[1] - 120), 400, 90))
-    cv.Copy(myScore.score, capture, myScore.scoreMask)
-    cv.ResetImageROI(capture)
-    # cv.ShowImage("window_a", frame)
-
-    cv.ShowImage("window_b", capture)
-
-    previous = cv.CloneImage(current)
-
-    # Exit game if ESC key is pressed
-    c = Key.WaitKey(2)
-    if c == 27:
-        break
-
-    initialDelay -= 1
+        capture = cv.QueryFrame(cam)
+        cv.Flip(capture, capture, flipMode=1)
+        c = Key.WaitKey(2)
+        if (c == 27):
+            break
+        cv.ShowImage("window_b", capture)
 
 # Print score to console
 #print myScore
