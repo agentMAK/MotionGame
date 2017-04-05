@@ -83,7 +83,7 @@ class Score:
 
 # Create windows to show the captured images
 # cv.NamedWindow("window_a", cv.CV_WINDOW_AUTOSIZE)
-cv.NamedWindow("Bubble Pop - Motion", cv.CV_WINDOW_NORMAL | cv.CV_WINDOW_FULLSCREEN )
+cv.NamedWindow("Bubble Pop - Motion", cv.CV_WINDOW_NORMAL)
 
 #cv.NamedWindow("window_a", cv.CV_WINDOW_AUTOSIZE)
 
