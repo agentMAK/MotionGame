@@ -200,6 +200,9 @@ def create_targets(count):
 
 # No. of targets and creates the that many targets using the createTarget method
 nballs = 5
+highScore = 0
+score = 0
+startDelay = False
 targets = create_targets(nballs)
 
 # Delay at the start of the game
@@ -244,27 +247,31 @@ while True:
         # Press space bar to run game
         if cv2.waitKey(33) == 32:
             initialDelay = 75
+            nballs = 5
+            targets = create_targets(nballs)
             startGame = True
+            startDelay = True
+            myScore.points = 0
 
     # Ready Set POP to start the game
-    if(initialDelay>50):
+    if(initialDelay>50 and startDelay == True):
         cv.SetImageROI(capture, ((frame_size[0] / 2) - 300, (frame_size[1] / 2) - 225, 600, 450))
         cv.Copy(ready, capture, readyMask)
         cv.ResetImageROI(capture)
 
-    if (50 > initialDelay > 25):
+    if (50 > initialDelay > 25 and startDelay == True):
         cv.SetImageROI(capture, ((frame_size[0] / 2) - 300, (frame_size[1] / 2) - 225, 600, 450))
         cv.Copy(set, capture, setMask)
         cv.ResetImageROI(capture)
 
-    if (25 > initialDelay > 0):
+    if (25 > initialDelay > 0 and startDelay == True):
         cv.SetImageROI(capture, ((frame_size[0] / 2) - 300, (frame_size[1] / 2) - 225, 600, 450))
         cv.Copy(pop, capture, popMask)
         cv.ResetImageROI(capture)
 
-    if(initialDelay == 0):
+    if(initialDelay == 0 and startDelay == True):
         t0 = time.clock()
-
+        startGame = True
 
     if startGame == True and initialDelay <= 0:
        for t in targets:
@@ -288,6 +295,7 @@ while True:
                     t.y = frame_size[1]-balloonMask.height
                     t.x = random.randint(0, frame_size[0] - balloonMask.width)
                     t.speed = (0, t.speed[1]-1)
+                    score += 1
                     # Change colour of balloon
                     t.colourCode = random.randrange(0, 5, 1)
 
@@ -297,17 +305,18 @@ while True:
                     myScore.points += 1
 
 
-    if startGame == True and initialDelay < 0 and time.clock() - t0 < 60:
-        timer = 61 - (time.clock() - t0)
-        cv.PutText(capture, "Timer: %d" % timer, (frame_size[0]-500, frame_size[1] - 50), font, cv.RGB(221, 87, 122))
+    if startGame == True and initialDelay < 0 and time.clock() - t0 < 30:
+        timer = 31 - (time.clock() - t0)
+        cv.PutText(capture, "Timer: %d" % timer, (frame_size[0]-500, frame_size[1] - 130), font, cv.RGB(221, 87, 122))
+        cv.PutText(capture, "High Score: %d" % highScore, (frame_size[0]-725, frame_size[1] - 60), font, cv.RGB(221, 87, 122))
     else:
         timer = 0
 
     #Update score every few seconds
-    if(initialDelay%10 == 0):
+    if(initialDelay%5 == 0):
         myScore.update()
 
-    cv.SetImageROI(capture, (30, (frame_size[1] - 120), 400, 90))
+    cv.SetImageROI(capture, (30, (frame_size[1] - 100), 400, 90))
     cv.Copy(myScore.score, capture, myScore.scoreMask)
     cv.ResetImageROI(capture)
     # cv.ShowImage("window_a", frame)
@@ -315,6 +324,14 @@ while True:
     cv.ShowImage("window_b", capture)
 
     previous = cv.CloneImage(current)
+
+    if nballs == 0:
+        if myScore.points>highScore:
+            highScore = myScore.points
+        startDelay = False
+        nballs = 5
+        initialDelay = 75
+        startGame = False
 
     # Exit game if ESC key is pressed
     c = Key.WaitKey(2)
