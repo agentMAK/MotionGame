@@ -44,7 +44,7 @@ class Targetsb:
         self.y = y
         self.width = 0
         self.height = 0
-        self.speed = (0,3)
+        self.speed = (0,5)
         self.active = True
 
     def getDimensions(self):
@@ -66,7 +66,7 @@ class PrintScore:
 
     def update(self):
         # Create image
-        size = width, height = 400, 90;
+        size = width, height = 400, 90
         scoreImage = Image.new('RGBA', size)
         scoreMaskImage = Image.new('RGB', size, "black")
 
@@ -120,6 +120,37 @@ class PrintTimer:
 
         self.timerMask = cv2.cvtColor(numpy.array(timerMaskImage), cv2.COLOR_RGB2BGR)
         self.timerMask = cv.fromarray(self.timerMask)
+
+
+class PrintEnding:
+    def __init__(self,points):
+        self.ending = 0
+        self.endingMask = 0
+        self.point = points
+
+    def update(self):
+        # Create image
+        size = width, height = 600, 450
+        endingImage = Image.new('RGBA', size)
+        endingMaskImage = Image.new('RGB', size, "black")
+
+        # Add font
+        titleFont = ImageFont.truetype("font/fibre-font.otf", 140)
+        scoreFont = ImageFont.truetype("font/fibre-font.otf", 200)
+
+        drawEnding = ImageDraw.Draw(endingImage)
+        drawEnding.text((12, 36), "You Scored", font=titleFont, fill=(227, 37, 81))
+        drawEnding.text((200, 135), str(self.point), font=scoreFont, fill=(2, 157, 175))
+
+        drawMaskEnding = ImageDraw.Draw(endingMaskImage)
+        drawMaskEnding.text((12, 36), "You Scored", font=titleFont, fill=(225, 225, 225))
+        drawMaskEnding.text((200, 135), str(self.point), font=scoreFont, fill=(225, 225, 225))
+
+        self.ending = cv2.cvtColor(numpy.array(endingImage), cv2.COLOR_RGB2BGR)
+        self.ending = cv.fromarray(self.ending)
+
+        self.endingMask = cv2.cvtColor(numpy.array(endingMaskImage), cv2.COLOR_RGB2BGR)
+        self.endingMask = cv.fromarray(self.endingMask)
 
 
 # Create windows to show the captured images
@@ -279,13 +310,13 @@ def gameIntro(previous):
         cv.Dilate(frame, frame, element=es, iterations=3)
 
         # Start Screen
-        if start_intro == False:
+        if start_intro is False:
             cv.SetImageROI(capture, ((frame_size[0] / 2) - 300, (frame_size[1] / 2) - 225, 600, 450))
             cv.Copy(start, capture, startMask)
             cv.ResetImageROI(capture)
 
             # Press space bar to run game
-            if cv2.waitKey(33) == 32:
+            if cv2.waitKey(33) is 32:
                 start_intro = True
 
         # Ready Set POP to start the game
@@ -304,10 +335,10 @@ def gameIntro(previous):
             cv.Copy(pop, capture, popMask)
             cv.ResetImageROI(capture)
 
-        if (initialDelay == 0):
+        if (initialDelay is 0):
             break;
 
-        if start_intro == True:
+        if start_intro is True:
             initialDelay -= 1
 
         cv.ShowImage("Bubble Pop - Motion", capture)
@@ -321,21 +352,17 @@ def gameIntro(previous):
 def startPlaying(previous):
     # No. of targets and creates the that many targets using the createTarget method
     nballs = 5
-    nbombs = 2
+    nbombs = 1
     targets = create_targets(nballs)
     targetsb = create_targetsb(nbombs)
-
-    # Delay at the start of the game
-    start_game = False
-    end_game = False
 
     myScore = PrintScore()
 
     myTimer = PrintTimer()
     start_time = time.clock()
-    game_duration = 5
+    game_duration = 30
 
-    while end_game == False:
+    while True:
         # Capture a frame
         capture = cv.QueryFrame(cam)
         cv.Flip(capture, capture, flipMode=1)
@@ -354,7 +381,7 @@ def startPlaying(previous):
             if t.active:
                 nzero = hit_value(frame, t)
                 # If the is NO MOVEMENT in the area of the target, draw next shape
-                if nzero < 1000:
+                if nzero < 6500:
                     # Draws the target to screen
                     cv.SetImageROI(capture, t.getDimensions())
                     colour = t.getColourCode()
@@ -363,8 +390,9 @@ def startPlaying(previous):
                     t.update()
                     # If the target hits the bottom
                     if t.y <= 0:
-                        t.active = False
-                        nballs -= 1
+                        t.y = frame_size[1] - balloonMask.height
+                        t.x = random.randint(0, frame_size[0] - balloonMask.width)
+                        t.speed = (0, t.speed[1] - 1)
                 # If the is balloon it hit
                 else:
                     t.y = frame_size[1] - balloonMask.height
@@ -381,7 +409,7 @@ def startPlaying(previous):
         for l in targetsb:
             if l.active:
                 nzero = hit_value(frame, l)
-                if nzero < 2000:
+                if nzero < 5500:
                     # Draws the target to screen
                     cv.SetImageROI(capture, l.getDimensions())
                     cv.Copy(bomb, capture, bombMask)
@@ -389,12 +417,12 @@ def startPlaying(previous):
                     l.update()
                     # If the target hits the bottom
                     if l.y + l.height >= frame_size[1]:
-                        l.active = False
-                        nbombs -= 1
+                        l.y = 0
+                        l.x = random.randint(0, frame_size[0] - bomb.width)
                 else:
                     l.y = 0
                     l.x = random.randint(0, frame_size[0]-bomb.width)
-                    myScore.points -= 10
+                    myScore.points -= 2
 
         myScore.update()
         myTimer.update()
@@ -410,8 +438,7 @@ def startPlaying(previous):
         cv.Copy(myTimer.timer, capture, myTimer.timerMask)
         cv.ResetImageROI(capture)
 
-        if start_game == True and myTimer.time < 0:
-            end_game = True
+        if myTimer.time < 0:
             return myScore.points
 
         # cv.ShowImage("window_a", frame)
@@ -423,29 +450,50 @@ def startPlaying(previous):
         # Exit game if ESC key is pressed
         c = Key.WaitKey(2)
 
-        if (c == 27):
-            return 0
+        if (c is 27):
+            return None
 
-
-def endScreen(previous):
+def endScreen(previous, points):
     while True:
-            capture = cv.QueryFrame(cam)
-            cv.Flip(capture, capture, flipMode=1)
-            c = Key.WaitKey(2)
+        # Capture a frame
+        capture = cv.QueryFrame(cam)
+        cv.Flip(capture, capture, flipMode=1)
 
-            if (c == 27):
-                break
-            cv.ShowImage("Bubble Pop - Motion", capture)
+        # Difference between frames
+        cv.Smooth(capture, current, cv.CV_BLUR, 15, 15)
+        cv.AbsDiff(current, previous, difference)
+
+        frame = cv.CreateImage(frame_size, 8, 1)
+        cv.CvtColor(difference, frame, cv.CV_BGR2GRAY)
+        cv.Threshold(frame, frame, 10, 0xff, cv.CV_THRESH_BINARY)
+        cv.Dilate(frame, frame, element=es, iterations=3)
+
+        credits = PrintEnding(points)
+        credits.update()
+
+        cv.SetImageROI(capture, ((frame_size[0] / 2) - 300, (frame_size[1] / 2) - 225, 600, 450))
+        cv.Copy(credits.ending, capture, credits.endingMask)
+        cv.ResetImageROI(capture)
+
+        c = Key.WaitKey(2)
+
+        if (c is 27):
+            return False
+
+        if cv2.waitKey(33) is 32:
+            return True
+
+        cv.ShowImage("Bubble Pop - Motion", capture)
 
 while True:
     gameIntro(previous)
     points = startPlaying(previous)
 
     #Handle exiting the program
-    if points == 0:
+    if points is None:
         break
 
-    if endScreen(previous) == False:
+    if endScreen(previous, points) is False:
         break
 
 
