@@ -121,38 +121,6 @@ class PrintTimer:
         self.timerMask = cv2.cvtColor(numpy.array(timerMaskImage), cv2.COLOR_RGB2BGR)
         self.timerMask = cv.fromarray(self.timerMask)
 
-class PrintYouScored:
-    def __init__(self):
-        self.score = 0
-        self.scoreMask = 0
-
-        self.points = 0
-
-    def update(self):
-        # Create image
-        size = width, height = 400, 90;
-        scoreImage = Image.new('RGBA', size)
-        scoreMaskImage = Image.new('RGB', size, "black")
-
-        # Add font
-        titleFont = ImageFont.truetype("font/fibre-font.otf", 60)
-        scoreFont = ImageFont.truetype("font/fibre-font.otf", 118)
-
-        drawScore = ImageDraw.Draw(scoreImage)
-        drawScore.text((16, 19), "Score:", font=titleFont, fill=(227, 37, 81))
-        drawScore.text((160, -3), str(self.points), font=scoreFont, fill=(2, 157, 175))
-
-        drawMaskScore = ImageDraw.Draw(scoreMaskImage)
-        drawMaskScore.text((16, 19), "Score:", font=titleFont, fill=(225, 225, 225))
-        drawMaskScore.text((160, -3), str(self.points), font=scoreFont, fill=(225, 225, 225))
-
-        self.score = cv2.cvtColor(numpy.array(scoreImage), cv2.COLOR_RGB2BGR)
-        self.score = cv.fromarray(self.score)
-
-        self.scoreMask = cv2.cvtColor(numpy.array(scoreMaskImage), cv2.COLOR_RGB2BGR)
-        self.scoreMask = cv.fromarray(self.scoreMask)
-
-
 
 # Create windows to show the captured images
 # cv.NamedWindow("window_a", cv.CV_WINDOW_AUTOSIZE)
@@ -212,11 +180,11 @@ cv.Resize(balloonYellow_Image, balloonYellow)
 balloons = [balloonGreen, balloonBlue, balloonOrange, balloonPink, balloonYellow]
 
 bombMaskImage = cv.LoadImage("images/bombMask.png")
-bombMask = cv.CreateImage((100, 100), bombMaskImage.depth, bombMaskImage.channels)
+bombMask = cv.CreateImage((75, 75), bombMaskImage.depth, bombMaskImage.channels)
 cv.Resize(bombMaskImage, bombMask)
 
 bombImage = cv.LoadImage("images/bomb.png")
-bomb = cv.CreateImage((100, 100), bombImage.depth, bombImage.channels)
+bomb = cv.CreateImage((75, 75), bombImage.depth, bombImage.channels)
 cv.Resize(bombImage, bomb)
 
 startMaskImage = cv.LoadImage("images/startMask.png")
@@ -295,10 +263,7 @@ def gameIntro(previous):
     start_intro = False
     initialDelay = 75
 
-
     while True:
-
-        myScore = PrintScore()
 
         # Capture a frame
         capture = cv.QueryFrame(cam)
@@ -319,15 +284,9 @@ def gameIntro(previous):
             cv.Copy(start, capture, startMask)
             cv.ResetImageROI(capture)
 
-            myScore.update()
-
-            cv.SetImageROI(capture, (30, (frame_size[1] - 120), 400, 90))
-            cv.Copy(myScore.score, capture, myScore.scoreMask)
-            cv.ResetImageROI(capture)
-
             # Press space bar to run game
-        if cv2.waitKey(33) == 32:
-            start_intro = True
+            if cv2.waitKey(33) == 32:
+                start_intro = True
 
         # Ready Set POP to start the game
         if (75 > initialDelay > 50):
@@ -363,7 +322,6 @@ def startPlaying(previous):
     # No. of targets and creates the that many targets using the createTarget method
     nballs = 5
     nbombs = 2
-
     targets = create_targets(nballs)
     targetsb = create_targetsb(nbombs)
 
@@ -375,7 +333,7 @@ def startPlaying(previous):
 
     myTimer = PrintTimer()
     start_time = time.clock()
-    game_duration = 30
+    game_duration = 5
 
     while end_game == False:
         # Capture a frame
@@ -436,7 +394,7 @@ def startPlaying(previous):
                 else:
                     l.y = 0
                     l.x = random.randint(0, frame_size[0]-bomb.width)
-                    myScore.points -= 5
+                    myScore.points -= 10
 
         myScore.update()
         myTimer.update()
@@ -452,24 +410,6 @@ def startPlaying(previous):
         cv.Copy(myTimer.timer, capture, myTimer.timerMask)
         cv.ResetImageROI(capture)
 
-        if myTimer.time<0 or nballs == 0:
-
-
-            filename = "Scores.txt"
-            try:
-                scores = open(filename,"a")
-                scores.write("Score: "+ str(myScore.points)+"\n")
-                scores.close()
-            except:
-                print("Problem appending", filename)
-
-
-
-            end_game = True
-            gameIntro(previous)
-            points = startPlaying(previous)
-
-
         if start_game == True and myTimer.time < 0:
             end_game = True
             return myScore.points
@@ -480,7 +420,7 @@ def startPlaying(previous):
 
         previous = cv.CloneImage(current)
 
-# Exit game if ESC key is pressed
+        # Exit game if ESC key is pressed
         c = Key.WaitKey(2)
 
         if (c == 27):
@@ -493,10 +433,6 @@ def endScreen(previous):
             cv.Flip(capture, capture, flipMode=1)
             c = Key.WaitKey(2)
 
-            cv.SetImageROI(capture, ((frame_size[0] / 2) - 300, (frame_size[1] / 2) - 225, 600, 450))
-            cv.Copy(start, capture, endMask)
-            cv.ResetImageROI(capture)
-
             if (c == 27):
                 break
             cv.ShowImage("Bubble Pop - Motion", capture)
@@ -504,6 +440,7 @@ def endScreen(previous):
 while True:
     gameIntro(previous)
     points = startPlaying(previous)
+
     #Handle exiting the program
     if points == 0:
         break
